@@ -9,8 +9,8 @@ public class WrapperLibScriptUser : MonoBehaviour
     public static System.IntPtr model;
 
     public int launch = 0; //variable pour savoir si un algo tourne ou pas 0 ok n'est pas en cours
-    public int iterationNumber = 100;
-    public double step = 0.75;
+    public int iterationNumber = 100000;
+    public double step = 0.01;
     public Transform[] learnObject;//tableau avec les données pour l'apprentissage
     public Transform[] testObject;//tableau avec les données pour les test 
 
@@ -83,7 +83,7 @@ public class WrapperLibScriptUser : MonoBehaviour
         launch = 1;
         if (model == System.IntPtr.Zero)
         {
-            model = LibWrapperMachineLearning.linear_create_model(2,1); //le nombre de coordonnée du point 
+            model = LibWrapperMachineLearning.linear_create_model(2,1); //le nombre de coordonnée du point envoyer et recu
             Debug.Log("Nouveau modéle : " + model);
         } else
         {
@@ -152,21 +152,41 @@ public class WrapperLibScriptUser : MonoBehaviour
             {
                 input[0] = unityObject.position.x;
                 input[1] = unityObject.position.z;
+                output[0] = unityObject.position.y;
+
                 var inPtr = GCHandle.Alloc(input, GCHandleType.Pinned);
                 var ouPtr = GCHandle.Alloc(output, GCHandleType.Pinned);
-                if ((float)LibWrapperMachineLearning.linear_classify(model, inPtr.AddrOfPinnedObject(), 2,ouPtr.AddrOfPinnedObject(),1) == 1)
+                /*if ((float)*/
+                Debug.Log("1" + unityObject.name + output[0]);
+                LibWrapperMachineLearning.linear_classify(model, inPtr.AddrOfPinnedObject(), 2, ouPtr.AddrOfPinnedObject(),1);
+
+
+                Debug.Log("2" + output[0]);
+                if (output[0] == 1)
                 {
                     unityObject.GetComponent<Renderer>().material.color = UnityEngine.Color.red;
                 } else
                 {
                     unityObject.GetComponent<Renderer>().material.color = UnityEngine.Color.green;
                 }
+                
+                
+                /* == 1)
+                {
+                    
+                } else
+                {
+                    
+                }*/
                 if(inPtr.IsAllocated)
                 {
                     inPtr.Free();
                 }
-                
+               
+
+
             }
+
         }
         else
         {
@@ -187,12 +207,33 @@ public class WrapperLibScriptUser : MonoBehaviour
             var inPtr = GCHandle.Alloc(input, GCHandleType.Pinned);
             var ouPtr = GCHandle.Alloc(output, GCHandleType.Pinned);
             Debug.Log(model);
-            int retur = LibWrapperMachineLearning.linear_fit_classification_rosenblatt(model, inPtr.AddrOfPinnedObject(), 2 * learnObject.Length, 2, ouPtr.AddrOfPinnedObject(),1,iterationNumber,step); ;
-            if(retur == -1)
+
+            var tab = new double[3];
+
+            Marshal.Copy(model, tab, 0, 3);
+
+            for (var i = 0; i < tab.Length; i++)
+            {
+                Debug.Log("model : " + tab[i]);
+            }
+
+            Debug.Log(model);
+            int retur = LibWrapperMachineLearning.linear_fit_classification_rosenblatt(model, inPtr.AddrOfPinnedObject(), learnObject.Length, 2, ouPtr.AddrOfPinnedObject(),1,iterationNumber,step); ;
+
+            Marshal.Copy(model, tab, 0, 3);
+
+            //Marshal.Copy(new[] { -4d, 1d, 1d}, 0, model, 3);
+
+            for (var i = 0; i < tab.Length; i++)
+            {
+                Debug.Log("model : " + tab[i]);
+            }
+            /*if(retur == -1)
             {
                 Debug.Log("classifRosenblattRetur : Il n'y a pas de modéle");
             }
-            else if(retur == 0)
+            else*/
+            if (retur == 1)
             {
                 Debug.Log("L'algorithme a été arrêter par le nombre d'itteration");
             }
@@ -226,10 +267,11 @@ public class WrapperLibScriptUser : MonoBehaviour
             input[i] = data.position.x;
             input[i + 1] = data.position.z;
             i += 2;
-            output[j] = data.position.y;
-            j++;
+            output[j++] = Mathf.Sign(data.position.y);
+
         }
     }
+   
 
 
 

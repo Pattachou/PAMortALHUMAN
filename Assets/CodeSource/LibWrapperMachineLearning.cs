@@ -15,7 +15,7 @@ public class LibWrapperMachineLearning
     public static extern System.IntPtr add_bias(System.IntPtr input, int inputSize);
 
     [DllImport("DllMachineLearningAPCT")]
-    public static extern double linear_classify(System.IntPtr model, System.IntPtr input, int inputSize, System.IntPtr output, int ouputsSize);
+    public static extern void linear_classify(System.IntPtr model, System.IntPtr input, int inputSize, System.IntPtr output, int ouputsSize);
 
     [DllImport("DllMachineLearningAPCT")]
     public static extern int linear_fit_classification_rosenblatt(System.IntPtr model, System.IntPtr inputs, int inputsSize, int inputSize, System.IntPtr outputs, int outputsSize, int iterationNumber, double step);
